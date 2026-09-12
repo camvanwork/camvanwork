@@ -11,7 +11,9 @@ const revealItems=document.querySelectorAll('.case-card,.approach-item,.timeline
 revealItems.forEach(item=>item.classList.add('reveal'));
 if('IntersectionObserver' in window){const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('is-visible');observer.unobserve(entry.target)}})},{threshold:.12});revealItems.forEach(item=>observer.observe(item))}else{revealItems.forEach(item=>item.classList.add('is-visible'))}
 
-// Google Translate: compact English-only switcher.
+// One-click English translation.
+// The button opens Google's translated view of the current page directly,
+// so visitors do not see Google's translation toolbar or have to choose a language manually.
 (function(){
   const nav=document.querySelector('.nav');
   if(!nav||document.querySelector('.language-switcher')) return;
@@ -22,55 +24,18 @@ if('IntersectionObserver' in window){const observer=new IntersectionObserver(ent
     .language-switcher button{appearance:none;border:1px solid rgba(23,23,23,.14);background:#fffdf8;color:#171717;border-radius:999px;padding:8px 12px;display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;line-height:1;cursor:pointer;transition:opacity .2s,transform .2s}
     .language-switcher button:hover{opacity:.7;transform:translateY(-1px)}
     .language-switcher .flag{font-size:15px;line-height:1}
-    #google_translate_element{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important;left:-9999px!important;top:-9999px!important}
-    .goog-te-banner-frame.skiptranslate{display:none!important}
-    body{top:0!important}
-    .goog-te-gadget{font-size:0!important}
-    .goog-te-gadget>*{display:none!important}
     @media(max-width:850px){.language-switcher{margin-left:auto;margin-right:8px}.language-switcher button{padding:8px 10px}}
   `;
   document.head.appendChild(style);
 
   const wrap=document.createElement('div');
   wrap.className='language-switcher';
-  wrap.innerHTML='<button type="button" aria-label="Translate website to English" title="Translate to English"><span class="flag">🇺🇸</span><span>EN</span></button><div id="google_translate_element" aria-hidden="true"></div>';
+  wrap.innerHTML='<button type="button" aria-label="Translate website to English" title="Translate to English"><span class="flag">🇺🇸</span><span>EN</span></button>';
   nav.insertBefore(wrap,menuToggle||null);
-
-  window.googleTranslateElementInit=function(){
-    if(window.google&&google.translate&&google.translate.TranslateElement){
-      new google.translate.TranslateElement({pageLanguage:'vi',includedLanguages:'en',autoDisplay:false,layout:google.translate.TranslateElement.InlineLayout.SIMPLE},'google_translate_element');
-    }
-  };
-
-  const googleScript=document.createElement('script');
-  googleScript.src='https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-  googleScript.async=true;
-  document.head.appendChild(googleScript);
 
   const button=wrap.querySelector('button');
   button.addEventListener('click',()=>{
-    // Set Google's language cookie first. This is more reliable than trying to
-    // trigger the hidden select programmatically, especially on GitHub Pages.
-    document.cookie='googtrans=/vi/en; path=/; max-age=31536000; SameSite=Lax';
-    document.cookie='googtrans=/vi/en; path=/; domain='+location.hostname+'; max-age=31536000; SameSite=Lax';
-
-    const select=document.querySelector('.goog-te-combo');
-    if(select){
-      select.value='en';
-      select.dispatchEvent(new Event('change',{bubbles:true}));
-      return;
-    }
-
-    // If the Google widget has not loaded yet, reload once with the cookie so
-    // Google Translate initializes in English on the next page load.
-    setTimeout(()=>{
-      const current=document.querySelector('.goog-te-combo');
-      if(current){
-        current.value='en';
-        current.dispatchEvent(new Event('change',{bubbles:true}));
-      }else{
-        location.reload();
-      }
-    },500);
+    const target='https://translate.google.com/translate?sl=vi&tl=en&u='+encodeURIComponent(window.location.href);
+    window.location.href=target;
   });
 })();
