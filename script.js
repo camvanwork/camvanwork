@@ -11,7 +11,7 @@ const revealItems=document.querySelectorAll('.case-card,.approach-item,.timeline
 revealItems.forEach(item=>item.classList.add('reveal'));
 if('IntersectionObserver' in window){const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('is-visible');observer.unobserve(entry.target)}})},{threshold:.12});revealItems.forEach(item=>observer.observe(item))}else{revealItems.forEach(item=>item.classList.add('is-visible'))}
 
-// Google Translate: a compact English-only switcher.
+// Google Translate: compact English-only switcher.
 (function(){
   const nav=document.querySelector('.nav');
   if(!nav||document.querySelector('.language-switcher')) return;
@@ -49,14 +49,28 @@ if('IntersectionObserver' in window){const observer=new IntersectionObserver(ent
 
   const button=wrap.querySelector('button');
   button.addEventListener('click',()=>{
-    const chooseEnglish=()=>{
-      const select=document.querySelector('.goog-te-combo');
-      if(select){select.value='en';select.dispatchEvent(new Event('change'));return true}
-      return false;
-    };
-    if(!chooseEnglish()){
-      let attempts=0;
-      const timer=setInterval(()=>{attempts++;if(chooseEnglish()||attempts>20)clearInterval(timer)},250);
+    // Set Google's language cookie first. This is more reliable than trying to
+    // trigger the hidden select programmatically, especially on GitHub Pages.
+    document.cookie='googtrans=/vi/en; path=/; max-age=31536000; SameSite=Lax';
+    document.cookie='googtrans=/vi/en; path=/; domain='+location.hostname+'; max-age=31536000; SameSite=Lax';
+
+    const select=document.querySelector('.goog-te-combo');
+    if(select){
+      select.value='en';
+      select.dispatchEvent(new Event('change',{bubbles:true}));
+      return;
     }
+
+    // If the Google widget has not loaded yet, reload once with the cookie so
+    // Google Translate initializes in English on the next page load.
+    setTimeout(()=>{
+      const current=document.querySelector('.goog-te-combo');
+      if(current){
+        current.value='en';
+        current.dispatchEvent(new Event('change',{bubbles:true}));
+      }else{
+        location.reload();
+      }
+    },500);
   });
 })();
